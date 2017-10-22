@@ -1,68 +1,110 @@
-/*
- * grunt-csproj-integrity
- * https://github.com/mantovanig/grunt-csproj-integrity
- *
- * Copyright (c) 2016 mantovanig
- * Licensed under the MIT license.
- */
-
 'use strict';
 
 // require modules
 const checksolution = require('csproj-integrity');
-const path = require('path');
+const log = console.log;
+const chalk = require('chalk');
 
 module.exports = function(grunt) {
 
-  // Please see the Grunt documentation for more information regarding task
-  // creation: http://gruntjs.com/creating-tasks
-  return grunt.registerMultiTask('csproj_integrity', 'Grunt plugin of csproj-integrity', function() {
+  var _this = this,
+			out = "",
+			checkFilesResult = false,
+			done = _this.async();
 
-  		var done = this.async();
+		log('\n=========================================================================\n');
 
-      var options = this.options({
-        checkFiles: false,
-        checkIntegrity: false,
-        failOnError: false // Fail the task on error. Default: false
-      });
+		Promise
+			.resolve()
+			.then(function() {
+				return checksolution.checkFiles(_this.data.filesList);
+			})
+			.then(function(result) {
 
-  		this.files.forEach(function(file) {
+				checkFilesResult = JSON.parse(result);
 
-        if(!file.cwd) {
-          file.cwd = '';
-        }
+				return checksolution.checkIntegrity();
+			})
+			.then((result) => {
+				var ret = JSON.parse(result);
 
-  			var files = file.src.map(function(f) { return path.join(file.cwd, f) })
-  			grunt.log.debug('Checking: ' +  files.length + ' files.');
+				if (checkFilesResult.status != 'success') {
+					
+          out = "\n";
+					out += "\n "
+					out += checkFilesResult.message
+					out += "\n"
+					out += "\n"
+					checkFilesResult.data.forEach(function(file) {
+						out += " - " + file + "\n";
+					});
 
-        var checkFilesResult; //Store the checkFiles result
+					log(chalk.white.bgRed.bold(out));
 
-       Promise.resolve()
-        .then(function () {
-          if(options.checkFiles) {
-              return checksolution.checkFiles(files);
-          }
-        })
-        .then(function (result) {
-          checkFilesResult = result;
-          if(options.checkIntegrity) {
-              return checksolution.checkIntegrity(files);
-          }
-        })
-        .then((result) => {
-           if (options.failOnError) {
-               var hasErrors = false;
-               hasErrors |= (checkFilesResult && checkFilesResult.length > 0); //One or more files are not included in the solution
-               hasErrors |= (result && result.length > 0); //One or more included files does not exist
-               if (hasErrors) {													
-                   grunt.fail.fatal('grunt-csproj-integrity: failure');
-               }
-            }
-            done();
-        });
+				} else {
+					log(chalk.white.bgGreen.bold(checkFilesResult.message));
+				}
 
-  		}) // end forEach
+				log('\n=========================================================================\n');
 
-  });
+				if (ret.status != 'success') {
+					log(chalk.white.bgRed.bold(ret.message));
+					log('\n');
 
+					if (ret.data.fileNotFound && ret.data.fileNotFound.length) {
+						log(chalk.white.bgBlue.bold('= NOT FOUND ==================================='));
+						log('\n');
+						ret.data.fileNotFound.forEach(function(file) {
+							log(chalk.white.bgRed.bold(file));
+						})
+						log('\n');
+					}
+
+					if (ret.data.duplicatedFiles && ret.data.duplicatedFiles.length) {
+						log(chalk.white.bgBlue.bold('= DUPLICATED ==================================='));
+						log('\n');
+						ret.data.duplicatedFiles.forEach(function(file) {
+							log(chalk.white.bgRed.bold(file));
+						})
+						log('\n');
+					}
+
+				} else {
+					log(chalk.white.bgGreen.bold(ret.message));
+				}
+
+				log('\n=========================================================================\n');
+
+				if (ret.data.none && ret.data.none.length) {
+          out = "\n";
+					out += "\n"
+					out += " = TYPE NONE ==================================="
+					out += "\n"
+					out += "\n"
+					ret.data.none.forEach(function(file) {
+						out += " - " + file + "\n";
+					})
+
+					log(chalk.white.bgBlue.bold(out));
+				}
+				
+        // log('\n=========================================================================\n');
+
+				// if (ret.data.content && ret.data.content.length) {
+        //   out = "\n";
+				// 	out += "\n"
+				// 	out += " = TYPE CONTENT ==================================="
+				// 	out += "\n"
+				// 	out += "\n"
+				// 	ret.data.content.forEach(function(file) {
+				// 		out += " - " + file + "\n";
+				// 	})
+        // 
+				// 	log(chalk.white.bgBlue.bold(out));
+				// }
+
+			}).catch((err) => {
+				done();
+			});
+	});
 };
