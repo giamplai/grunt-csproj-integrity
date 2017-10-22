@@ -12,6 +12,13 @@ module.exports = function(grunt) {
 			checkFilesResult = false,
 			done = _this.async();
 
+		if (_this.data.basePath) 
+			process.chdir(_this.data.basePath);
+
+		let cwd = process.cwd();
+
+		log('\n= PATH ==================================================================\n');
+		log(cwd);
 		log('\n=========================================================================\n');
 
 		Promise
