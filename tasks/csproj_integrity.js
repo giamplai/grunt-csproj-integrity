@@ -6,8 +6,8 @@ const log = console.log;
 const chalk = require('chalk');
 
 module.exports = function(grunt) {
-
-  var _this = this,
+	return grunt.registerMultiTask('integrity_checker', 'Analyze CSPROJ file and included files.', function() {
+		var _this = this,
 			out = "",
 			checkFilesResult = false,
 			done = _this.async();
@@ -29,8 +29,8 @@ module.exports = function(grunt) {
 				var ret = JSON.parse(result);
 
 				if (checkFilesResult.status != 'success') {
-					
-          out = "\n";
+
+					out = "\n";
 					out += "\n "
 					out += checkFilesResult.message
 					out += "\n"
@@ -76,7 +76,7 @@ module.exports = function(grunt) {
 				log('\n=========================================================================\n');
 
 				if (ret.data.none && ret.data.none.length) {
-          out = "\n";
+					out = "\n";
 					out += "\n"
 					out += " = TYPE NONE ==================================="
 					out += "\n"
@@ -87,11 +87,11 @@ module.exports = function(grunt) {
 
 					log(chalk.white.bgBlue.bold(out));
 				}
-				
-        // log('\n=========================================================================\n');
+
+				// log('\n=========================================================================\n');
 
 				// if (ret.data.content && ret.data.content.length) {
-        //   out = "\n";
+				//   out = "\n";
 				// 	out += "\n"
 				// 	out += " = TYPE CONTENT ==================================="
 				// 	out += "\n"
@@ -99,7 +99,7 @@ module.exports = function(grunt) {
 				// 	ret.data.content.forEach(function(file) {
 				// 		out += " - " + file + "\n";
 				// 	})
-        // 
+				// 
 				// 	log(chalk.white.bgBlue.bold(out));
 				// }
 
