@@ -6,7 +6,7 @@ const log = console.log;
 const chalk = require('chalk');
 
 module.exports = function(grunt) {
-	return grunt.registerMultiTask('integrity_checker', 'Analyze CSPROJ file and included files.', function() {
+	return grunt.registerMultiTask('csproj_integrity', 'Analyze CSPROJ file and included files.', function() {
 		var _this = this,
 			out = "",
 			checkFilesResult = false,
